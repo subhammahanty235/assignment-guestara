@@ -1,42 +1,31 @@
-name: ampher-prod application
+name: Build and Deploy to Azure
 
 on:
   push:
     branches:
-      - production  # Trigger deployment when changes are pushed to the `production` branch
+      - main
 
 jobs:
-  deploy:
+  build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v2
+    - name: Checkout code
+      uses: actions/checkout@v3
 
-      - name: Log in to Azure
-        uses: azure/login@v1
-        with:
-          creds: '{"clientId": "${{ secrets.AZURE_CLIENT_ID }}", "clientSecret": "${{ secrets.AZURE_CLIENT_SECRET }}", "subscriptionId": "${{ secrets.AZURE_SUBSCRIPTION_ID }}", "tenantId": "${{ secrets.AZURE_TENANT_ID }}"}'
+    - name: Log in to Azure Container Registry
+      run: |
+        echo "${{ secrets.AZURE_PASSWORD }}" | docker login ${{ secrets.AZURE_CONTAINER_REGISTRY }} -u ${{ secrets.AZURE_USERNAME }} --password-stdin
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
+    - name: Build Docker image
+      run: |
+        docker build -t ${{ secrets.AZURE_CONTAINER_REGISTRY }}/guestara-assignment:${{ github.sha }} .
 
-      - name: Log in to Azure Container Registry
-        uses: docker/login-action@v2
-        with: 
-          registry: ${{ secrets.AZURE_CONTAINER_REGISTRY }}
-          username: ${{ secrets.AZURE_CLIENT_ID }}
-          password: ${{ secrets.AZURE_CLIENT_SECRET }}
-         
-          
-      - name: Build and Push Docker Image
-        run: |
-          docker build -t ${{ secrets.AZURE_CONTAINER_REGISTRY }}/vite-react-app:v1 .
-          docker push ${{ secrets.AZURE_CONTAINER_REGISTRY }}/vite-react-app:v1
+    - name: Push Docker image
+      run: |
+        docker push ${{ secrets.AZURE_CONTAINER_REGISTRY }}/guestara-assignment:${{ github.sha }}
 
-      - name: Deploy to Azure Web App
-        uses: azure/webapps-deploy@v2
-        with:
-          app-name: ampher-prod
-          slot-name: ""
-          images: ${{ secrets.AZURE_CONTAINER_REGISTRY }}/vite-react-app:v1
+    - name: Deploy to Azure Web App
+      run: |
+        az login --service-principal -u ${{ secrets.AZURE_USERNAME }} -p ${{ secrets.AZURE_PASSWORD }} --tenant ${{secrets.TENANT_ID}}
+        az webapp config container set --name guestara-assignment --resource-group guestaraResourceG --docker-custom-image-name ${{ secrets.AZURE_CONTAINER_REGISTRY }}/guestara-assignment:${{ github.sha }} --docker-registry-server-url https://${{ secrets.AZURE_CONTAINER_REGISTRY }}
