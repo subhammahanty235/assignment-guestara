@@ -1,6 +1,8 @@
 Guestara Menu Management Backend
 Features
 
+** Deployed URL : https://guestara-assignment.azurewebsites.net/
+
 Menu management with hierarchical structure:
     Categories
     Subcategories under categories
@@ -88,6 +90,27 @@ Learning Points
 
     Multiple model based operations like beforeSave..
     Managing relationships with Sequelize ORM
+
+What was the most difficult part of the assignment?
+
+    I felt the assignment was not that much difficult and every instruction was mentioned clearly. 
+    But i thought to deploy the assignment to azure using docker and Github Actins, that was a bit hard to be honest but i managed to do it. 
+
+Future Improvements
+
+    Adding authentication and authorization
+    Implementing caching for frequently accessed data
+    A transactionId based approval system to stop data getting live before approval.
+    Basic frontend for all those operations
+    Image upload functionality instead of URLs
+    Adding unit and integration tests
+
+
+
+
+
+
+
     
 
 
